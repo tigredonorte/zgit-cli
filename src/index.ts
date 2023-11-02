@@ -13,7 +13,7 @@ async function main() {
   }
 
   try {
-    command.execute(...args);
+    await command.execute(...args);
   } catch (error) {
     console.error('Error:', error instanceof Error ? error.message : error);
   }

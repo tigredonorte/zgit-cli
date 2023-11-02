@@ -11,12 +11,13 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "start": "nodemon",
-    "sync": "npm run build && npm i -g ."
+    "sync": "npm uninstall -g . && rimraf ./dist && npm run build && npm i -g --force ."
   },
   "bin": {
     "zgit-cli": "./dist/index.js"
   },
   "dependencies": {
+    "enquirer": "^2.4.1",
     "simple-git": "^3.20.0"
   },
   "devDependencies": {
