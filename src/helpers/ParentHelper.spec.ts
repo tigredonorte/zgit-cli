@@ -7,20 +7,13 @@ jest.mock('simple-git', () => {
   }));
 });
 
-// class MockPrefixHelper implements IPrefixHelper {
-//   getPrefix = jest.fn();
-//   getParentPrefix = jest.fn();
-// }
-
 describe('ParentHelper', () => {
   const mainBranch = 'main';
   let parentHelper: ParentHelper;
   let mockGit: jest.Mocked<SimpleGit>;
-  // let mockPrefixHelper: MockPrefixHelper;
 
   beforeEach(() => {
     mockGit = simpleGit() as jest.Mocked<SimpleGit>;
-    // mockPrefixHelper = new MockPrefixHelper();
     parentHelper = new ParentHelper(mockGit);
   });
 
@@ -59,6 +52,17 @@ describe('ParentHelper', () => {
 
       expect(parents).not.toContain(siblingBranch);
       expect(parents).toEqual([parentBranch, mainBranch]);
+    });
+    it('should return gran-parent: feature-1 when a parent doesn`t exists', async () => {
+      const currentBranch = 'feature-1-1-1-test';
+      const grandParentBranch = 'feature-1-some-feature';
+      mockGit.branchLocal.mockResolvedValueOnce({
+        all: [currentBranch, grandParentBranch, mainBranch],
+      } as BranchSummary);
+
+      const parents = await parentHelper.getParents(currentBranch);
+
+      expect(parents).toEqual([grandParentBranch, mainBranch]);
     });
   });
 
