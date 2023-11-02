@@ -34,6 +34,7 @@ module.exports = {
       'error',
       2
     ],
+    'no-else-return': ['error', { allowElseIf: false }],
     'linebreak-style': [
       'error',
       'unix'
