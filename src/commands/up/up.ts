@@ -22,7 +22,11 @@ export class UpCommand implements ICommand {
       const { firstParent } = await this.parentHelper.getParent(currentBranch);
 
       if (!firstParent) {
-        throw new Error('No sibling branches found.');
+        throw new Error('No parent branches found.');
+      }
+
+      if (firstParent === 'main') {
+        throw new Error('No parent branches found.');
       }
 
       await this.git.checkout(firstParent);

@@ -28,10 +28,8 @@ export class ParentHelper implements IParentHelper {
       const branch = result[currentPrefix];
       if (branch) {
         parentBranches.push(branch);
-        currentPrefix = this.prefixHelper.getParentPrefix(branch);
-      } else {
-        break;
       }
+      currentPrefix = this.prefixHelper.getParentPrefix(currentPrefix);
     }
       
     parentBranches.push('main');
