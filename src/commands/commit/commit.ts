@@ -42,6 +42,7 @@ export class CommitCommand implements ICommand {
   }
 
   private async handleCommitMessage(commitMessage?: string): Promise<string | false> {
+    console.log('handleCommitMessage', commitMessage);
     if (commitMessage) {
       return commitMessage;
     }
@@ -51,12 +52,12 @@ export class CommitCommand implements ICommand {
       name: 'action',
       message: 'Would you like to amend, add a new commit message, or cancel?',
       choices: [
-        { name: 'Amend the last commit', value: 'amend' },
-        { name: 'Add a new commit message', value: 'newMessage' },
-        { name: 'Cancel operation', value: 'cancel' }
+        { name: 'amend', message: 'Amend the last commit' },
+        { name: 'newMessage', message: 'Add a new commit message' },
+        { name: 'cancel', message: 'Cancel operation'}
       ]
     });
-
+    console.log('response', response);
     if (response.action === 'cancel') {
       console.log('No commit message entered. Operation cancelled.');
       return false;
@@ -101,12 +102,12 @@ export class CommitCommand implements ICommand {
 
     const result = await this.handleCommitMessage(commitMessage);
     if (result === false) {
-      console.log('b2');
+      console.log('Operation cancelled.');
       return;
     }
 
-    console.log('c');
     commitMessage = result;
+    console.log('commitMessage', commitMessage);
     if (commitMessage) {
       const finalMessage = jiraTask ? `${jiraTask}: ${commitMessage}` : commitMessage;
       await this.git.commit(finalMessage);
