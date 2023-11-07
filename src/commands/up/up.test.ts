@@ -51,8 +51,8 @@ describe('UpCommand', () => {
 
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      await expect(upCommand.execute()).rejects.toThrow('No sibling branches found.');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('UpCommand Error:', 'No sibling branches found.');
+      await expect(upCommand.execute()).rejects.toThrow('No parent branches found.');
+      expect(consoleErrorSpy).toHaveBeenCalledWith('UpCommand Error:', 'No parent branches found.');
 
       consoleErrorSpy.mockRestore();
     });
