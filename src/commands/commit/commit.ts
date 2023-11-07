@@ -96,7 +96,9 @@ export class CommitCommand implements ICommand {
     const branchName = await this.git.revparse(['--abbrev-ref', 'HEAD']);
     const jiraTask = branchName.match(/[A-Z]+-\d+/)?.[0];
 
-    if (!this.hasAddedFiles()) {
+    const hasAddedFiles = await this.hasAddedFiles();
+    if (!hasAddedFiles) {
+      console.log('hasAddedFiles returned false');
       return;
     }
 
