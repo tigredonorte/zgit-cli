@@ -2,8 +2,21 @@
 
 import { CommandRegistry } from './commands';
 
+function help(commandName: string) {
+  if (commandName === 'help' || !commandName) {
+    const temp = Object.keys(CommandRegistry).map((commandName) => {
+      const command = CommandRegistry[commandName];
+      return `${commandName}: ${command.help()}`;
+    });
+    console.log('Available commands:\n\n' + temp.join('\n\n'));
+    process.exit(1);
+  }
+}
+
 async function main() {
   const [commandName, ...args] = process.argv.slice(2);
+  help(commandName);
+
   const command = CommandRegistry[commandName];
 
   if (!command) {
