@@ -3,11 +3,10 @@ import simpleGit, { SimpleGit } from 'simple-git';
 import { ICommand } from '../ICommand';
 
 export class CommitCommand implements ICommand {
-  private git: SimpleGit;
-
-  public constructor(git: SimpleGit = simpleGit()) {
-    this.git = git;
-  }
+  public constructor(
+    private git: SimpleGit = simpleGit(),
+    private logger = console,
+  ) { }
 
   public help(): string {
     return 'Usage: zgit commit [commit message]\n' +
@@ -29,20 +28,18 @@ export class CommitCommand implements ICommand {
       ]
     });
   
-    console.log('response', response);
     if (response.action !== 'add') {
-      console.log('Operation cancelled.');
+      this.logger.log('Operation cancelled.');
       return false;
     }
 
     await this.git.add(['-A']);
-    console.log('All changes added.');
+    this.logger.log('All changes added.');
 
     return true;
   }
 
   private async handleCommitMessage(commitMessage?: string): Promise<string | false> {
-    console.log('handleCommitMessage', commitMessage);
     if (commitMessage) {
       return commitMessage;
     }
@@ -57,20 +54,18 @@ export class CommitCommand implements ICommand {
         { name: 'cancel', message: 'Cancel operation'}
       ]
     });
-    console.log('response', response);
     if (response.action === 'cancel') {
-      console.log('No commit message entered. Operation cancelled.');
+      this.logger.log('No commit message entered. Operation cancelled.');
       return false;
     }
 
     if (response.action === 'amend') {
       await this.git.commit('--amend', '--no-edit');
-      console.log('Commit amended.');
+      this.logger.log('Commit amended.');
       return '';
     } 
     
     if (response.action === 'newMessage') {
-      console.log('response', response);
       const messageResponse: { message: string } = await prompt({
         type: 'input',
         name: 'message',
@@ -79,17 +74,16 @@ export class CommitCommand implements ICommand {
     
       commitMessage = messageResponse.message;
 
-      console.log('commitMessage', commitMessage);
       if (!commitMessage) {
-        console.log('No commit message entered. Operation cancelled.');
+        this.logger.log('No commit message entered. Operation cancelled.');
         return false;
       }
       
       return commitMessage;
     }
 
-    console.log('Operation cancelled.');
-    return false; // Exit the function if user selects cancel
+    this.logger.log('Operation cancelled.');
+    return false;
   }
 
   public async execute(commitMessage?: string): Promise<void> {
@@ -98,25 +92,23 @@ export class CommitCommand implements ICommand {
 
     const hasAddedFiles = await this.hasAddedFiles();
     if (!hasAddedFiles) {
-      console.log('hasAddedFiles returned false');
       return;
     }
 
     const result = await this.handleCommitMessage(commitMessage);
     if (result === false) {
-      console.log('Operation cancelled.');
       return;
     }
 
     commitMessage = result;
-    console.log('commitMessage', commitMessage);
     if (commitMessage) {
       const finalMessage = jiraTask ? `${jiraTask}: ${commitMessage}` : commitMessage;
       await this.git.commit(finalMessage);
+      this.logger.log(`Committed with message: ${finalMessage}`);
     }
 
-    console.log('d');
     await this.git.push('origin', 'HEAD', ['--force']);
+    this.logger.log('Pushed to origin HEAD with force.');
   }
 
   private async hasStagedChanges(): Promise<boolean> {
