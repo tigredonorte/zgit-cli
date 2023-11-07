@@ -117,15 +117,15 @@ describe('CommitCommand', () => {
       expect(consoleLogSpy).toHaveBeenCalledWith('No commit message entered. Operation cancelled.');
       consoleLogSpy.mockRestore();
     });
-  });
 
-  it('should push the commit with --force option', async () => {
-    mockGit.diff.mockResolvedValueOnce('');
-    mockPrompt.mockResolvedValueOnce({ action: 'newMessage' });
-    mockPrompt.mockResolvedValueOnce({ message: 'feat: new feature' });
-
-    await commitCommand.execute('test');
-
-    expect(mockGit.push).toHaveBeenCalledWith('origin', 'HEAD', ['--force']);
+    it('should push the commit with --force option', async () => {
+      mockGit.diff.mockResolvedValueOnce('');
+      mockPrompt.mockResolvedValueOnce({ action: 'newMessage' });
+      mockPrompt.mockResolvedValueOnce({ message: 'feat: new feature' });
+  
+      await commitCommand.execute('test');
+  
+      expect(mockGit.push).toHaveBeenCalledWith('origin', 'HEAD', ['--force']);
+    });
   });
 });

@@ -42,6 +42,6 @@ describe('SyncUpCommand', () => {
     expect(gitMock.checkout).toHaveBeenCalledTimes(parents.length + 1);
     expect(gitMock.rebase).toHaveBeenCalledTimes(parents.length + 1);
     expect(gitMock.stash).toHaveBeenCalledTimes(1);
-    expect(gitMock.raw).toHaveBeenCalledWith(['stash', 'apply']);
+    expect(gitMock.raw).toHaveBeenCalledWith(['stash', 'list']);
   });
 });
