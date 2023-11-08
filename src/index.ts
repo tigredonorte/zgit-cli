@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+import 'reflect-metadata';
 import { CommandRegistry } from './commands';
 
 function help(commandName: string) {
