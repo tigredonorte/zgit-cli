@@ -1,5 +1,6 @@
 import simpleGit, { BranchSummary, SimpleGit } from 'simple-git';
 import { ParentHelper } from './ParentHelper';
+import { PrefixHelper } from '../PrefixHelper/PrefixHelper';
 
 jest.mock('simple-git', () => {
   return jest.fn().mockImplementation(() => ({
@@ -14,7 +15,7 @@ describe('ParentHelper', () => {
 
   beforeEach(() => {
     mockGit = simpleGit() as jest.Mocked<SimpleGit>;
-    parentHelper = new ParentHelper(mockGit);
+    parentHelper = new ParentHelper(mockGit, new PrefixHelper());
   });
 
   describe('getParents', () => {

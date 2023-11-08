@@ -1,9 +1,11 @@
+import { injectable } from 'inversify';
+
 export interface IPrefixHelper {
   getPrefix(branch: string): string;
   getParentPrefix(currentBranch: string): string;
   getTopLevelParentPrefix(currentBranch: string): string;
 }
-
+@injectable()
 export class PrefixHelper implements IPrefixHelper {
 
   public getPrefix(branch: string): string {

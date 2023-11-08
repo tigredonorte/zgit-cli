@@ -1,14 +1,16 @@
-import simpleGit, { SimpleGit } from 'simple-git';
-import { BranchHelper, ChildrenHelper, IBranchHelper, IChildrenHelper, IParentHelper, ParentHelper } from '../../helpers';
+import { inject } from 'inversify';
+import { SimpleGit } from 'simple-git';
+import { IBranchHelper, IChildrenHelper, ILoggerHelper, IParentHelper } from '../../helpers';
+import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
 export class BackCommand implements ICommand {
   public constructor(
-    private git: SimpleGit = simpleGit(),
-    private childrenHelper: IChildrenHelper = new ChildrenHelper(git),
-    private parentHelper: IParentHelper = new ParentHelper(git),
-    private branchHelper: IBranchHelper = new BranchHelper(git),
-    private logger = console,
+    @inject(TYPES.SimpleGit) private git: SimpleGit,
+    @inject(TYPES.ChildrenHelper) private childrenHelper: IChildrenHelper,
+    @inject(TYPES.ParentHelper) private parentHelper: IParentHelper,
+    @inject(TYPES.BranchHelper) private branchHelper: IBranchHelper,
+    @inject(TYPES.LoggerHelper) private logger: ILoggerHelper,
   ) {}
 
   public help(): string {
