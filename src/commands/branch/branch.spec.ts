@@ -48,6 +48,11 @@ describe('BranchCommand', () => {
     jest.clearAllMocks();
   });
 
+  it('should get help', async () => {
+    const help = branchCommand.help();
+    expect(help).toContain('zgit-cli branch');
+  });
+
   describe('sanityTests', () => {
     it('should exit if no branch is found', async () => {
       await branchCommand.execute();

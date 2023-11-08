@@ -1,9 +1,10 @@
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
 import { IBranchHelper, IChildrenHelper, ILoggerHelper, IParentHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
+@injectable()
 export class NextCommand implements ICommand {
   public constructor(
     @inject(TYPES.SimpleGit) private git: SimpleGit,
@@ -14,12 +15,16 @@ export class NextCommand implements ICommand {
   ) {}
 
   public help(): string {
-    return 'Usage: zgit next\n' +
+    return 'Usage: zgit-cli next\n' +
            'Switches to the next sibling branch if available.';
   }
 
   public async execute(): Promise<void> {
     const currentBranch = await this.branchHelper.getCurrentBranch();
+    if (!currentBranch) {
+      this.logger.log('No current branch found. Exiting.');
+      return;
+    }
     const siblings = await this.getSiblings(currentBranch);
     
     const currentIndex = siblings.findIndex((branch: string) => branch === currentBranch);

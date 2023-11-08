@@ -28,6 +28,11 @@ describe('DownCommand', () => {
     (prompt as jest.MockedFunction<typeof prompt>).mockImplementation(promptMock);
   });
 
+  it('should get help', async () => {
+    const help = downCommand.help();
+    expect(help).toContain('zgit-cli down');
+  });
+
   it('should handle no child branches', async () => {
     branchHelperMock.getCurrentBranch.mockResolvedValue('currentBranch');
     childrenHelperMock.getChildren.mockResolvedValue([]);

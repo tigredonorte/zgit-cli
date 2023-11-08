@@ -1,10 +1,11 @@
 import { prompt } from 'enquirer';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
 import { ILoggerHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
+@injectable()
 export class CommitCommand implements ICommand {
   public constructor(
     @inject(TYPES.SimpleGit) private git: SimpleGit,
@@ -12,7 +13,7 @@ export class CommitCommand implements ICommand {
   ) { }
 
   public help(): string {
-    return 'Usage: zgit commit [commit message]\n' +
+    return 'Usage: zgit-cli commit [commit message]\n' +
            'If no commit message is provided, the last commit will be amended.';
   }
 

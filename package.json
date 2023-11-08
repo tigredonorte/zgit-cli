@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .js,.ts",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "start": "nodemon",
     "sync": "npm uninstall -g . && rimraf ./dist && npm run build && npm i -g --force ."
   },

@@ -35,11 +35,9 @@ describe('CommitCommand', () => {
     jest.clearAllMocks();
   });
 
-  describe('Help command', () => {
-    it('should return the correct help message', () => {
-      const helpMessage = commitCommand.help();
-      expect(helpMessage).toContain('Usage: zgit commit [commit message]');
-    });
+  it('should get help', async () => {
+    const help = commitCommand.help();
+    expect(help).toContain('zgit-cli commit');
   });
 
   describe('when there is not staged changes', () => {

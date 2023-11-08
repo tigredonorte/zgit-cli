@@ -4,6 +4,7 @@ import simpleGit, { SimpleGit } from 'simple-git';
 import {
   BranchHelper,
   ChildrenHelper,
+  LoggerHelper,
   ParentHelper,
   PrefixHelper,
 } from '../helpers/index';
@@ -15,5 +16,6 @@ myContainer.bind<BranchHelper>(TYPES.BranchHelper).to(BranchHelper);
 myContainer.bind<ChildrenHelper>(TYPES.ChildrenHelper).to(ChildrenHelper);
 myContainer.bind<PrefixHelper>(TYPES.PrefixHelper).to(PrefixHelper);
 myContainer.bind<ParentHelper>(TYPES.ParentHelper).to(ParentHelper);
+myContainer.bind<LoggerHelper>(TYPES.LoggerHelper).to(LoggerHelper);
 
 export { myContainer };

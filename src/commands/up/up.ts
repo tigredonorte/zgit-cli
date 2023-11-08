@@ -1,10 +1,11 @@
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
 import { IBranchHelper, IParentHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
 
+@injectable()
 export class UpCommand implements ICommand {
 
   public constructor(

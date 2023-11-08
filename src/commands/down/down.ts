@@ -1,11 +1,11 @@
 import { prompt } from 'enquirer';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
 import { IBranchHelper, IChildrenHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
-
+@injectable()
 export class DownCommand implements ICommand {
 
   public constructor(
