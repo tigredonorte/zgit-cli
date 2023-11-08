@@ -1,9 +1,10 @@
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
 import { IBranchHelper, IParentHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
+@injectable()
 export class SyncUpCommand implements ICommand {
 
   public constructor(
@@ -13,7 +14,7 @@ export class SyncUpCommand implements ICommand {
   ) {}
 
   public help(): string {
-    return 'Usage: zgit-cli sync-up\n' +
+    return 'Usage: zgit-cli syncUp\n' +
            'Rebases the current branch and its parents with the latest changes from its parent branches.';
   }
 

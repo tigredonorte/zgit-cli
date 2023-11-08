@@ -23,6 +23,11 @@ describe('UpCommand', () => {
     jest.clearAllMocks();
   });
 
+  it('should get help', async () => {
+    const help = upCommand.help();
+    expect(help).toContain('zgit-cli up');
+  });
+
   describe('execute', () => {
     it('should checkout the first parent branch if it exists', async () => {
       mockBranchHelper.getCurrentBranch.mockResolvedValueOnce('feature-1-1');

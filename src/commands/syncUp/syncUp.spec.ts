@@ -25,6 +25,11 @@ describe('SyncUpCommand', () => {
     syncUpCommand = new SyncUpCommand(gitMock, parentHelperMock, branchHelperMock);
   });
 
+  it('should get help', async () => {
+    const help = syncUpCommand.help();
+    expect(help).toContain('zgit-cli syncUp');
+  });
+
   it('should rebase the current branch and its parents with the latest changes', async () => {
     const parents = ['main', 'feature', 'feature-1'];
     branchHelperMock.getCurrentBranch.mockResolvedValue('feature-1-1');

@@ -1,10 +1,11 @@
 import { prompt } from 'enquirer';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
 import { IBranchHelper, IChildrenHelper, ILoggerHelper, IPrefixHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
+@injectable()
 export class BranchCommand implements ICommand {
   public constructor(
     @inject(TYPES.SimpleGit) private git: SimpleGit,
@@ -15,7 +16,7 @@ export class BranchCommand implements ICommand {
   ) { }
 
   public help(): string {
-    return 'Usage: zgit branch\n' +
+    return 'Usage: zgit-cli branch\n' +
            'Handles feature branch creation and switching.';
   }
 
