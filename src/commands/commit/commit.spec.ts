@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
-import { CommitCommand } from './commit';
 import simpleGit, { SimpleGit } from 'simple-git';
+import { MockLoggerHelper } from '../../helpers/LoggerHelper/MockLoggerHelper';
+import { CommitCommand } from './commit';
 
 const mockSimpleGit = {
   revparse: jest.fn(),
@@ -19,10 +20,12 @@ describe('CommitCommand', () => {
   let commitCommand: CommitCommand;
   let mockGit: jest.Mocked<SimpleGit>;
   let mockPrompt: jest.Mock;
+  let mockLogger: jest.Mocked<MockLoggerHelper>;
 
   beforeEach(() => {
     mockGit = simpleGit() as jest.Mocked<SimpleGit>;
-    commitCommand = new CommitCommand(mockGit);
+    mockLogger = new MockLoggerHelper();
+    commitCommand = new CommitCommand(mockGit, mockLogger);
     mockPrompt = jest.fn();
     (prompt as jest.MockedFunction<typeof prompt>).mockImplementation(mockPrompt);
     mockGit.revparse.mockResolvedValueOnce('GIT-123');
@@ -72,10 +75,9 @@ describe('CommitCommand', () => {
       mockGit.diff.mockRejectedValueOnce(new Error('changes present'));
     });
     it('messageParam: false, cancel selected', async () => {
-      mockPrompt
-        .mockResolvedValueOnce({ action: 'cancel' });
+      mockPrompt.mockResolvedValueOnce({ action: 'cancel' });
 
-      const consoleLogSpy = jest.spyOn(console, 'log');
+      const consoleLogSpy = jest.spyOn(mockLogger, 'log');
   
       await commitCommand.execute();
   
@@ -109,7 +111,7 @@ describe('CommitCommand', () => {
     it('should cancel the operation if no commit message is entered after prompting for new message', async () => {
       mockPrompt.mockResolvedValueOnce({ action: 'newMessage' });
       mockPrompt.mockResolvedValueOnce({ message: '' });
-      const consoleLogSpy = jest.spyOn(console, 'log');
+      const consoleLogSpy = jest.spyOn(mockLogger, 'log');
   
       await commitCommand.execute();
   

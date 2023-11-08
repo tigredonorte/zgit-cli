@@ -1,8 +1,7 @@
 import simpleGit, { SimpleGit } from 'simple-git';
-import { BranchHelper } from '../../helpers/BranchHelper';
-import { ParentHelper } from '../../helpers/ParentHelper';
+import { MockBranchHelper } from '../../helpers/BranchHelper/MockBranchHelper';
+import { MockParentHelper } from '../../helpers/ParentHelper/MockParentHelper';
 import { SyncUpCommand } from './syncUp';
-
 
 const mockSimpleGit = {
   fetch: jest.fn(),
@@ -12,19 +11,17 @@ const mockSimpleGit = {
   raw: jest.fn(),
 };
 jest.mock('simple-git', () => jest.fn(() => mockSimpleGit));
-jest.mock('../../helpers/ParentHelper');
-jest.mock('../../helpers/BranchHelper');
 
 describe('SyncUpCommand', () => {
   let syncUpCommand: SyncUpCommand;
   let gitMock: jest.Mocked<SimpleGit>;
-  let parentHelperMock: jest.Mocked<ParentHelper>;
-  let branchHelperMock: jest.Mocked<BranchHelper>;
+  let parentHelperMock: jest.Mocked<MockParentHelper>;
+  let branchHelperMock: jest.Mocked<MockBranchHelper>;
 
   beforeEach(() => {
     gitMock = simpleGit() as jest.Mocked<SimpleGit>;
-    parentHelperMock = new ParentHelper(gitMock) as jest.Mocked<ParentHelper>;
-    branchHelperMock = new BranchHelper(gitMock) as jest.Mocked<BranchHelper>;
+    parentHelperMock = new MockParentHelper();
+    branchHelperMock = new MockBranchHelper();
     syncUpCommand = new SyncUpCommand(gitMock, parentHelperMock, branchHelperMock);
   });
 
@@ -35,6 +32,7 @@ describe('SyncUpCommand', () => {
     gitMock.fetch.mockResolvedValue({} as never);
     gitMock.checkout.mockResolvedValue({} as never);
     gitMock.rebase.mockResolvedValue({} as never);
+    gitMock.raw.mockResolvedValueOnce('any');
 
     await syncUpCommand.execute();
 
@@ -43,5 +41,6 @@ describe('SyncUpCommand', () => {
     expect(gitMock.rebase).toHaveBeenCalledTimes(parents.length + 1);
     expect(gitMock.stash).toHaveBeenCalledTimes(1);
     expect(gitMock.raw).toHaveBeenCalledWith(['stash', 'list']);
+    expect(gitMock.raw).toHaveBeenCalledWith(['stash', 'apply']);
   });
 });

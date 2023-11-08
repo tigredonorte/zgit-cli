@@ -1,6 +1,15 @@
+
+
+
+
+
+
+
+
+
 import simpleGit, { SimpleGit } from 'simple-git';
 import { ChildrenHelper, IChildrenHelper } from './ChildrenHelper';
-import { PrefixHelper } from './PrefixHelper';
+import { PrefixHelper } from '../PrefixHelper/PrefixHelper';
 
 jest.mock('simple-git', () => {
   return jest.fn().mockImplementation(() => ({

@@ -1,14 +1,16 @@
-import simpleGit, { SimpleGit } from 'simple-git';
-import { BranchHelper, IBranchHelper, IParentHelper, ParentHelper } from '../../helpers';
+import { inject } from 'inversify';
+import { SimpleGit } from 'simple-git';
+import { IBranchHelper, IParentHelper } from '../../helpers';
+import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
 
 export class UpCommand implements ICommand {
 
   public constructor(
-    private git: SimpleGit = simpleGit(),
-    private branchHelper: IBranchHelper = new BranchHelper(git),
-    private parentHelper: IParentHelper = new ParentHelper(git),
+    @inject(TYPES.SimpleGit) private git: SimpleGit,
+    @inject(TYPES.BranchHelper) private branchHelper: IBranchHelper,
+    @inject(TYPES.ParentHelper) private parentHelper: IParentHelper,
   ) {}
 
   help(): string {

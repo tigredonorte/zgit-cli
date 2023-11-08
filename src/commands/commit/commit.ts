@@ -1,11 +1,14 @@
 import { prompt } from 'enquirer';
-import simpleGit, { SimpleGit } from 'simple-git';
+import { inject } from 'inversify';
+import { SimpleGit } from 'simple-git';
+import { ILoggerHelper } from '../../helpers';
+import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
 export class CommitCommand implements ICommand {
   public constructor(
-    private git: SimpleGit = simpleGit(),
-    private logger = console,
+    @inject(TYPES.SimpleGit) private git: SimpleGit,
+    @inject(TYPES.LoggerHelper) private logger: ILoggerHelper,
   ) { }
 
   public help(): string {

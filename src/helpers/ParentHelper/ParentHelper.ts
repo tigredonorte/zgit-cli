@@ -1,16 +1,18 @@
-import simpleGit, { SimpleGit } from 'simple-git';
-import { IPrefixHelper, PrefixHelper } from './PrefixHelper';
+import { inject, injectable } from 'inversify';
+import { SimpleGit } from 'simple-git';
+import TYPES from '../../inversify/types';
+import { PrefixHelper } from '../PrefixHelper/PrefixHelper';
 
 export interface IParentHelper {
   getParents(currentBranch: string): Promise<string[]>;
   getParent(currentBranch: string): Promise<{ firstParent: string, parentBranches: string[] }>;
 }
-
+@injectable()
 export class ParentHelper implements IParentHelper {
 
   constructor(
-    private git: SimpleGit = simpleGit(),
-    private prefixHelper: IPrefixHelper = new PrefixHelper(),
+    @inject(TYPES.SimpleGit) private git: SimpleGit,
+    @inject(TYPES.PrefixHelper) private prefixHelper: PrefixHelper,
   ) {}
 
   public async getParents(currentBranch: string) {

@@ -1,15 +1,17 @@
 import { prompt } from 'enquirer';
-import simpleGit, { SimpleGit } from 'simple-git';
-import { BranchHelper, ChildrenHelper, IBranchHelper, IChildrenHelper, IPrefixHelper, PrefixHelper } from '../../helpers';
+import { inject } from 'inversify';
+import { SimpleGit } from 'simple-git';
+import { IBranchHelper, IChildrenHelper, ILoggerHelper, IPrefixHelper } from '../../helpers';
+import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
 export class BranchCommand implements ICommand {
   public constructor(
-    private git: SimpleGit = simpleGit(),
-    private logger = console,
-    private branchHelper: IBranchHelper = new BranchHelper(git),
-    private childrenHelper: IChildrenHelper = new ChildrenHelper(git),
-    private prefixHelper: IPrefixHelper = new PrefixHelper(),
+    @inject(TYPES.SimpleGit) private git: SimpleGit,
+    @inject(TYPES.LoggerHelper) private logger: ILoggerHelper,
+    @inject(TYPES.PrefixHelper) private prefixHelper: IPrefixHelper,
+    @inject(TYPES.BranchHelper) private branchHelper: IBranchHelper,
+    @inject(TYPES.ChildrenHelper) private childrenHelper: IChildrenHelper,
   ) { }
 
   public help(): string {
@@ -19,13 +21,24 @@ export class BranchCommand implements ICommand {
 
   public async execute(): Promise<void> {
     const currentBranch = await this.branchHelper.getCurrentBranch();
+    if (!currentBranch) {
+      this.logger.log('No current branch found. Exiting.');
+      return;
+    }
     const prefix = this.prefixHelper.getPrefix(currentBranch);
-    const isFeatureBranch = /-\d+-$/.test(prefix);
-
-    if (!isFeatureBranch) {
-      return await this.switchFeatureBranch();
+    if (!prefix) {
+      this.logger.log('No prefix found. Exiting.');
+      return;
     }
 
+    const isFeatureBranch = /-\d+-$/.test(prefix);
+    if (isFeatureBranch) {
+      return await this.isFeatureBranch(prefix, currentBranch);
+    }
+    return await this.switchFeatureBranch(currentBranch);
+  }
+
+  private async isFeatureBranch(prefix: string, currentBranch: string): Promise<void> {
     const { switchFeature } = await prompt<{ switchFeature: string }>({
       type: 'select',
       name: 'switchFeature',
@@ -37,12 +50,12 @@ export class BranchCommand implements ICommand {
     });
     
     if (switchFeature === 'switch') {
-      return await this.switchFeatureBranch();
+      return await this.switchFeatureBranch(currentBranch);
     } 
     await this.askForSlugAndCreateBranch(prefix, currentBranch);
   }
 
-  private async switchFeatureBranch(): Promise<void> {
+  private async switchFeatureBranch(currentBranch: string): Promise<void> {
     const { featureBranch } = await prompt<{ featureBranch: string }>({
       type: 'input',
       name: 'featureBranch',
@@ -51,8 +64,8 @@ export class BranchCommand implements ICommand {
     });
 
     if (featureBranch) {
-      await this.git.checkout(featureBranch);
-      console.log(`Switched to feature branch: ${featureBranch}`);
+      await this.git.checkoutBranch(featureBranch, currentBranch);
+      this.logger.log(`Switched to feature branch: ${featureBranch}`);
     }
   }
 
@@ -66,10 +79,27 @@ export class BranchCommand implements ICommand {
 
     if (slug) {
       const children = await this.childrenHelper.getChildren(parentBranch);
-      const childNumber = children.length + 1;
+      const childNumber = this.getNextChildrenNumber(children);
       const newBranchName = `${prefix}${childNumber}-${slug.replace(/\s+/g, '-')}`;
       await this.git.checkoutBranch(newBranchName, parentBranch);
-      console.log(`Created and switched to branch: ${newBranchName}`);
+      this.logger.log(`Created and switched to branch: ${newBranchName}`);
     }
+  }
+
+  private getNextChildrenNumber(children: string[]) {
+    const result = children.map(branch => { 
+      const segments = branch.split('-');
+      const numberSegment = segments.map(segment => /\d/.test(segment));
+
+      // Find the index where the first true appears in numberSegment array
+      const firstTrueIndex = numberSegment.indexOf(true);
+      if (firstTrueIndex === -1) {
+        return 1;
+      }
+
+      const firstFalseAfterTrueIndex = numberSegment.indexOf(false, firstTrueIndex);
+      return parseInt(segments[firstFalseAfterTrueIndex - 1]) + 1;
+    }).sort();
+    return result[result.length - 1] || 1;
   }
 }

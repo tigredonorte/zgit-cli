@@ -1,5 +1,6 @@
 import simpleGit, { SimpleGit } from 'simple-git';
-import { IBranchHelper, IParentHelper } from '../../helpers';
+import { MockBranchHelper } from '../../helpers/BranchHelper/MockBranchHelper';
+import { MockParentHelper } from '../../helpers/ParentHelper/MockParentHelper';
 import { UpCommand } from './up';
 
 jest.mock('simple-git', () => {
@@ -7,15 +8,6 @@ jest.mock('simple-git', () => {
     checkout: jest.fn(),
   }));
 });
-
-class MockBranchHelper implements IBranchHelper {
-  getCurrentBranch = jest.fn();
-}
-
-class MockParentHelper implements IParentHelper {
-  getParent = jest.fn();
-  getParents = jest.fn();
-}
 
 describe('UpCommand', () => {
   let upCommand: UpCommand;

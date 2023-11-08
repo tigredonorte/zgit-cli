@@ -1,3 +1,4 @@
+import { myContainer } from '../inversify/myContainer';
 import { ICommand } from './ICommand';
 import { BackCommand } from './back/back';
 import { BranchCommand } from './branch/branch';
@@ -8,11 +9,11 @@ import { SyncUpCommand } from './syncUp/syncUp';
 import { UpCommand } from './up/up';
 
 export const CommandRegistry: Record<string, ICommand> = {
-  down: new DownCommand(),
-  up: new UpCommand(),
-  syncUp: new SyncUpCommand(),
-  commit: new CommitCommand(),
-  next: new NextCommand(),
-  back: new BackCommand(),
-  branch: new BranchCommand(),
+  down: myContainer.resolve<DownCommand>(DownCommand),
+  up: myContainer.resolve<UpCommand>(UpCommand),
+  syncUp: myContainer.resolve<SyncUpCommand>(SyncUpCommand),
+  commit: myContainer.resolve<CommitCommand>(CommitCommand),
+  next: myContainer.resolve<NextCommand>(NextCommand),
+  back: myContainer.resolve<BackCommand>(BackCommand),
+  branch: myContainer.resolve<BranchCommand>(BranchCommand)
 };
