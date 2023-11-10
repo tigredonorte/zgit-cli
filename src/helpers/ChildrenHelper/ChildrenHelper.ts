@@ -5,6 +5,7 @@ import { PrefixHelper } from '../PrefixHelper/PrefixHelper';
 
 export interface IChildrenHelper {
   getChildren(currentBranch: string): Promise<string[]>;
+  sortArray(arr: string[]): string[];
 }
 @injectable()
 export class ChildrenHelper implements IChildrenHelper {
@@ -21,7 +22,28 @@ export class ChildrenHelper implements IChildrenHelper {
       const branchPrefix = this.prefixHelper.getPrefix(branch);
       return branchPrefix.startsWith(currentPrefix) && branchPrefix !== currentPrefix;
     });
-    return childBranches;
+
+    const sortedChildren = this.sortArray(childBranches);
+    return sortedChildren;
   }
+
+  public sortArray(arr: string[]) {
+    return arr.sort((a, b) => {
+      // Extracting the numeric parts of each string
+      const numsA = a.split('-').filter(part => /^\d+$/.test(part)).map(Number);
+      const numsB = b.split('-').filter(part => /^\d+$/.test(part)).map(Number);
+  
+      // Comparing the numeric sequences
+      for (let i = 0; i < Math.min(numsA.length, numsB.length); i++) {
+        if (numsA[i] !== numsB[i]) {
+          return numsA[i] - numsB[i];
+        }
+      }
+  
+      // In case of a tie, the one with fewer numbers comes first
+      return numsA.length - numsB.length;
+    });
+  }
+  
 
 }

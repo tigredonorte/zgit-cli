@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
+import { Argv } from 'yargs';
 import { IBranchHelper, IChildrenHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
@@ -13,6 +14,10 @@ export class DownCommand implements ICommand {
     @inject(TYPES.ChildrenHelper) private childrenHelper: IChildrenHelper,
     @inject(TYPES.BranchHelper) private branchHelper: IBranchHelper,
   ) {}
+
+  public configure(yargs: Argv): Argv {
+    return yargs;
+  }
 
   public help(): string {
     return 'Usage: zgit-cli down\n' +

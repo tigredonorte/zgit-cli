@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
-import { IBranchHelper, IChildrenHelper, ILoggerHelper, IParentHelper } from '../../helpers';
+import { Argv } from 'yargs';
+import { IBranchHelper, IChildrenHelper, ILoggerHelper, IPrefixHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
@@ -9,14 +10,17 @@ export class BackCommand implements ICommand {
   public constructor(
     @inject(TYPES.SimpleGit) private git: SimpleGit,
     @inject(TYPES.ChildrenHelper) private childrenHelper: IChildrenHelper,
-    @inject(TYPES.ParentHelper) private parentHelper: IParentHelper,
     @inject(TYPES.BranchHelper) private branchHelper: IBranchHelper,
     @inject(TYPES.LoggerHelper) private logger: ILoggerHelper,
+    @inject(TYPES.PrefixHelper) private prefixHelper: IPrefixHelper,
   ) {}
 
   public help(): string {
-    return 'Usage: zgit-cli back\n' +
-           'Switches to the previous sibling branch if available.';
+    return 'Switches to the previous sibling branch if available.';
+  }
+
+  public configure(yargs: Argv): Argv {
+    return yargs;
   }
 
   public async execute(): Promise<void> {
@@ -43,8 +47,8 @@ export class BackCommand implements ICommand {
   }
 
   private async getSiblings(currentBranch: string): Promise<string[]> {
-    const parent = await this.parentHelper.getParent(currentBranch);
-    const siblings = await this.childrenHelper.getChildren(parent.firstParent);
+    const prefix = this.prefixHelper.getParentPrefix(currentBranch);
+    const siblings = await this.childrenHelper.getChildren(prefix);
     return siblings;
   }
 }
