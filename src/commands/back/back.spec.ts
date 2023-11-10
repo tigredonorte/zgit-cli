@@ -1,9 +1,9 @@
 import simpleGit, { SimpleGit } from 'simple-git';
-import { IBranchHelper, IChildrenHelper, ILoggerHelper, IParentHelper } from '../../helpers';
+import { IBranchHelper, IChildrenHelper, ILoggerHelper, IPrefixHelper } from '../../helpers';
 import { MockBranchHelper } from '../../helpers/BranchHelper/MockBranchHelper';
 import { MockChildrenHelper } from '../../helpers/ChildrenHelper/MockChildrenHelper';
 import { MockLoggerHelper } from '../../helpers/LoggerHelper/MockLoggerHelper';
-import { MockParentHelper } from '../../helpers/ParentHelper/MockParentHelper';
+import { MockPrefixHelper } from '../../helpers/PrefixHelper/MockPrefixHelper';
 import { BackCommand } from './back';
 
 jest.mock('simple-git', () => jest.fn().mockImplementation(() => ({
@@ -14,23 +14,23 @@ describe('BackCommand', () => {
   let backCommand: BackCommand;
   let mockGit: jest.Mocked<SimpleGit>;
   let mockChildrenHelper: jest.Mocked<IChildrenHelper>;
-  let mockParentHelper: jest.Mocked<IParentHelper>;
   let mockBranchHelper: jest.Mocked<IBranchHelper>;
   let mockLogger: jest.Mocked<ILoggerHelper>;
+  let mockPrefix: jest.Mocked<IPrefixHelper>;
   
   beforeEach(() => {
     mockGit = simpleGit() as jest.Mocked<SimpleGit>;
     mockChildrenHelper = new MockChildrenHelper();
-    mockParentHelper = new MockParentHelper();
     mockBranchHelper = new MockBranchHelper();
     mockLogger = new MockLoggerHelper();
+    mockPrefix = new MockPrefixHelper();
     
     backCommand = new BackCommand(
       mockGit,
       mockChildrenHelper,
-      mockParentHelper,
       mockBranchHelper,
       mockLogger,
+      mockPrefix,
     );
   });
 
@@ -45,7 +45,7 @@ describe('BackCommand', () => {
 
   it('should switch to the previous sibling branch if available', async () => {
     mockBranchHelper.getCurrentBranch.mockResolvedValue('feature/CPF-789-2-fix');
-    mockParentHelper.getParent.mockResolvedValue({ firstParent: 'feature/CPF-789', parentBranches: []  });
+    mockPrefix.getParentPrefix.mockReturnValue('feature/CPF-789');
     mockChildrenHelper.getChildren.mockResolvedValue([
       'feature/CPF-789-1-addition',
       'feature/CPF-789-2-fix',
@@ -60,7 +60,7 @@ describe('BackCommand', () => {
 
   it('should log an error if there is no previous sibling branch', async () => {
     mockBranchHelper.getCurrentBranch.mockResolvedValue('feature/CPF-789-1-addition');
-    mockParentHelper.getParent.mockResolvedValue({ firstParent: 'feature/CPF-789', parentBranches: []  });
+    mockPrefix.getParentPrefix.mockReturnValue('feature/CPF-789');
     mockChildrenHelper.getChildren.mockResolvedValue([
       'feature/CPF-789-1-addition',
       'feature/CPF-789-2-fix'
@@ -74,7 +74,7 @@ describe('BackCommand', () => {
 
   it('should handle when current branch is the only child', async () => {
     mockBranchHelper.getCurrentBranch.mockResolvedValue('feature/CPF-789-1-addition');
-    mockParentHelper.getParent.mockResolvedValue({ firstParent: 'feature/CPF-789', parentBranches: [] });
+    mockPrefix.getParentPrefix.mockReturnValue('feature/CPF-789');
     mockChildrenHelper.getChildren.mockResolvedValue(['feature/CPF-789-1-addition']);
 
     await backCommand.execute();

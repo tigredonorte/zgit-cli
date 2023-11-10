@@ -1,10 +1,10 @@
 import simpleGit, { SimpleGit } from 'simple-git';
-import { NextCommand } from './next';
-import { MockChildrenHelper } from '../../helpers/ChildrenHelper/MockChildrenHelper';
-import { MockParentHelper } from '../../helpers/ParentHelper/MockParentHelper';
+import { IBranchHelper, IChildrenHelper, ILoggerHelper, IPrefixHelper } from '../../helpers';
 import { MockBranchHelper } from '../../helpers/BranchHelper/MockBranchHelper';
+import { MockChildrenHelper } from '../../helpers/ChildrenHelper/MockChildrenHelper';
 import { MockLoggerHelper } from '../../helpers/LoggerHelper/MockLoggerHelper';
-import { IBranchHelper, IChildrenHelper, ILoggerHelper, IParentHelper } from '../../helpers';
+import { MockPrefixHelper } from '../../helpers/PrefixHelper/MockPrefixHelper';
+import { NextCommand } from './next';
 
 jest.mock('simple-git', () => {
   return jest.fn().mockImplementation(() => ({
@@ -15,21 +15,21 @@ describe('NextCommand', () => {
   let nextCommand: NextCommand;
   let mockGit: jest.Mocked<SimpleGit>;
   let mockChildrenHelper: jest.Mocked<IChildrenHelper>;
-  let mockParentHelper: jest.Mocked<IParentHelper>;
+  let mockPrefixHelper: jest.Mocked<IPrefixHelper>;
   let mockBranchHelper: jest.Mocked<IBranchHelper>;
   let mockLogger: jest.Mocked<ILoggerHelper>;
 
   beforeEach(() => {
     mockGit = simpleGit() as jest.Mocked<SimpleGit>;
     mockChildrenHelper = new MockChildrenHelper();
-    mockParentHelper = new MockParentHelper();
+    mockPrefixHelper = new MockPrefixHelper();
     mockBranchHelper = new MockBranchHelper();
     mockLogger = new MockLoggerHelper();
 
     nextCommand = new NextCommand(
       mockGit,
       mockChildrenHelper,
-      mockParentHelper,
+      mockPrefixHelper,
       mockBranchHelper,
       mockLogger,
     );
@@ -46,7 +46,7 @@ describe('NextCommand', () => {
 
   it('should switch to the next sibling branch if available', async () => {
     mockBranchHelper.getCurrentBranch.mockResolvedValue('feature/CPF-789-1-addition');
-    mockParentHelper.getParent.mockResolvedValue({ firstParent: 'feature/CPF-789', parentBranches: []});
+    mockPrefixHelper.getParentPrefix.mockReturnValue('feature/CPF-789');
     mockChildrenHelper.getChildren.mockResolvedValue([
       'feature/CPF-789-1-addition',
       'feature/CPF-789-2-fix',
@@ -61,7 +61,7 @@ describe('NextCommand', () => {
 
   it('should log an error if there is no next sibling branch', async () => {
     mockBranchHelper.getCurrentBranch.mockResolvedValue('feature/CPF-789-3-update');
-    mockParentHelper.getParent.mockResolvedValue({ firstParent: 'feature/CPF-789', parentBranches: []});
+    mockPrefixHelper.getParentPrefix.mockReturnValue('feature/CPF-789');
     mockChildrenHelper.getChildren.mockResolvedValue([
       'feature/CPF-789-1-addition',
       'feature/CPF-789-2-fix',
@@ -76,7 +76,7 @@ describe('NextCommand', () => {
 
   it('should handle when current branch is the last child', async () => {
     mockBranchHelper.getCurrentBranch.mockResolvedValue('feature/CPF-789-3-update');
-    mockParentHelper.getParent.mockResolvedValue({ firstParent: 'feature/CPF-789', parentBranches: []});
+    mockPrefixHelper.getParentPrefix.mockReturnValue('feature/CPF-789');
     mockChildrenHelper.getChildren.mockResolvedValue(['feature/CPF-789-3-update']);
 
     await nextCommand.execute();

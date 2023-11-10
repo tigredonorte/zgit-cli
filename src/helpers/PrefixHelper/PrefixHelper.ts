@@ -49,7 +49,7 @@ export class PrefixHelper implements IPrefixHelper {
     const segments = currentBranch.split('-');
     const numberSegment = segments.map(segment => /\d/.test(segment));
     const firstTrueIndex = numberSegment.indexOf(true);
-    const granParent = segments.slice(0, firstTrueIndex);
+    const granParent = segments.slice(0, firstTrueIndex + 1);
     return granParent.join('-');
   }
 }

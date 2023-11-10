@@ -15,6 +15,12 @@ jest.mock('enquirer', () => ({
   prompt: jest.fn(),
 }));
 
+const mockYargs = <T>(data: Record<string, T>) => ({
+  ...data,
+  _: [],
+  $0: '',
+});
+
 
 describe('CommitCommand', () => {
   let commitCommand: CommitCommand;
@@ -59,7 +65,7 @@ describe('CommitCommand', () => {
         .mockResolvedValueOnce({ action: 'add' })
         .mockResolvedValueOnce({ action: 'add' });
 
-      await commitCommand.execute('any message');
+      await commitCommand.execute(mockYargs({ message: 'any message' }));
 
       expect(mockGit.add).toHaveBeenCalledWith(['-A']);
       expect(mockGit.commit).toHaveBeenCalledWith('GIT-123: any message');
@@ -70,7 +76,7 @@ describe('CommitCommand', () => {
   describe('when there are staged changes', () => {
 
     beforeEach(() => {
-      mockGit.diff.mockRejectedValueOnce(new Error('changes present'));
+      mockGit.diff.mockResolvedValueOnce('any diff');
     });
     it('messageParam: false, cancel selected', async () => {
       mockPrompt.mockResolvedValueOnce({ action: 'cancel' });
@@ -103,7 +109,7 @@ describe('CommitCommand', () => {
   
       await commitCommand.execute();
   
-      expect(mockGit.commit).toHaveBeenCalledWith('--amend', '--no-edit');
+      expect(mockGit.commit).toHaveBeenCalledWith('', [], {'--amend': null, '--no-edit': null});
     });
 
     it('should cancel the operation if no commit message is entered after prompting for new message', async () => {
@@ -123,7 +129,7 @@ describe('CommitCommand', () => {
       mockPrompt.mockResolvedValueOnce({ action: 'newMessage' });
       mockPrompt.mockResolvedValueOnce({ message: 'feat: new feature' });
   
-      await commitCommand.execute('test');
+      await commitCommand.execute(mockYargs({ message: 'test' }));
   
       expect(mockGit.push).toHaveBeenCalledWith('origin', 'HEAD', ['--force']);
     });

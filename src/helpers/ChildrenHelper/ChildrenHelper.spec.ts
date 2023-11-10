@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 import simpleGit, { SimpleGit } from 'simple-git';
 import { ChildrenHelper, IChildrenHelper } from './ChildrenHelper';
 import { PrefixHelper } from '../PrefixHelper/PrefixHelper';
@@ -40,7 +31,7 @@ describe('ChildrenHelper', () => {
     } as never);
 
     const children = await childrenHelper.getChildren('feature-1');
-    expect(children).toEqual(['feature-1-1', 'feature-1-2', 'feature-1-1-1']);
+    expect(children).toEqual(['feature-1-1', 'feature-1-1-1', 'feature-1-2']);
 
     const children2 = await childrenHelper.getChildren('feature-1-1');
     expect(children2).toEqual(['feature-1-1-1']);

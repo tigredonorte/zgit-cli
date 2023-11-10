@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
+import { Argv } from 'yargs';
 import { IBranchHelper, IChildrenHelper, ILoggerHelper, IPrefixHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
@@ -16,8 +17,11 @@ export class BranchCommand implements ICommand {
   ) { }
 
   public help(): string {
-    return 'Usage: zgit-cli branch\n' +
-           'Handles feature branch creation and switching.';
+    return 'Handles feature branch creation and switching.';
+  }
+
+  public configure(yargs: Argv): Argv {
+    return yargs;
   }
 
   public async execute(): Promise<void> {

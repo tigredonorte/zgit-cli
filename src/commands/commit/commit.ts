@@ -1,25 +1,38 @@
 import { prompt } from 'enquirer';
 import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
+import { ArgumentsCamelCase, Argv } from 'yargs';
 import { ILoggerHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
+interface CommitOptions {
+  message?: string;
+}
 @injectable()
-export class CommitCommand implements ICommand {
+export class CommitCommand implements ICommand<CommitOptions> {
   public constructor(
     @inject(TYPES.SimpleGit) private git: SimpleGit,
     @inject(TYPES.LoggerHelper) private logger: ILoggerHelper,
   ) { }
 
   public help(): string {
-    return 'Usage: zgit-cli commit [commit message]\n' +
-           'If no commit message is provided, the last commit will be amended.';
+    return 'If no commit message is provided, the last commit will be amended.';
+  }
+
+  public configure(yargs: Argv<CommitOptions>): Argv<CommitOptions> {
+    return yargs
+      .positional('message', {
+        describe: 'port to bind on',
+        type: 'string',
+        required: false,
+      });
   }
 
   private async hasAddedFiles(): Promise<boolean> {
     const hasStagedChanges = await this.hasStagedChanges();
     if (hasStagedChanges) {
+      this.logger.log('You have staged changes. Skipping add.');
       return true;
     }
     const response: { action: string } = await prompt({
@@ -64,7 +77,7 @@ export class CommitCommand implements ICommand {
     }
 
     if (response.action === 'amend') {
-      await this.git.commit('--amend', '--no-edit');
+      await this.git.raw(['commit', '--amend', '--no-edit']);
       this.logger.log('Commit amended.');
       return '';
     } 
@@ -90,7 +103,8 @@ export class CommitCommand implements ICommand {
     return false;
   }
 
-  public async execute(commitMessage?: string): Promise<void> {
+  public async execute(args?: ArgumentsCamelCase<CommitOptions>): Promise<void> {
+    let commitMessage = args?.message;
     const branchName = await this.git.revparse(['--abbrev-ref', 'HEAD']);
     const jiraTask = branchName.match(/[A-Z]+-\d+/)?.[0];
 
@@ -111,16 +125,17 @@ export class CommitCommand implements ICommand {
       this.logger.log(`Committed with message: ${finalMessage}`);
     }
 
-    await this.git.push('origin', 'HEAD', ['--force']);
-    this.logger.log('Pushed to origin HEAD with force.');
+    const result2 = await this.git.push('origin', 'HEAD', ['--force']);
+    this.logger.log('Pushed to origin HEAD with force. \n', result2.remoteMessages.all.join('\n'));
   }
 
   private async hasStagedChanges(): Promise<boolean> {
     try {
-      await this.git.diff(['--cached', '--quiet']);
+      const result = await this.git.raw(['diff', '--cached', '--name-only']);
+      return result !== '';
+    } catch (error) {
+      this.logger.error('Error checking for staged changes:', error);
       return false;
-    } catch {
-      return true;
     }
   }
 }
