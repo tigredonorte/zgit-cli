@@ -55,7 +55,7 @@ export class BranchCommand implements ICommand {
     });
     
     if (switchFeature === 'switch') {
-      return await this.switchFeatureBranch(currentBranch);
+      return await this.switchFeatureBranch('origin/main');
     } 
     await this.askForSlugAndCreateBranch(prefix, currentBranch);
   }
