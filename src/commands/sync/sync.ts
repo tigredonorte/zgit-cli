@@ -2,7 +2,7 @@ import { prompt } from 'enquirer';
 import { inject, injectable } from 'inversify';
 import { SimpleGit } from 'simple-git';
 import { ArgumentsCamelCase, Argv } from 'yargs';
-import { IBranchHelper, ILoggerHelper, IParentHelper } from '../../helpers';
+import { IBranchHelper, IChildrenHelper, ILoggerHelper, IParentHelper } from '../../helpers';
 import TYPES from '../../inversify/types';
 import { ICommand } from '../ICommand';
 
@@ -21,6 +21,7 @@ export class SyncCommand implements ICommand<SyncOptions> {
     @inject(TYPES.ParentHelper) private parentHelper: IParentHelper,
     @inject(TYPES.BranchHelper) private branchHelper: IBranchHelper,
     @inject(TYPES.LoggerHelper) private logger: ILoggerHelper,
+    @inject(TYPES.ChildrenHelper) private childrenHelper: IChildrenHelper,
   ) {}
 
   public help(): string {
@@ -41,7 +42,7 @@ export class SyncCommand implements ICommand<SyncOptions> {
         default: false,
       })
       .positional('full', {
-        describe: 'should sync all parents (if is up) or all children (if is down). Defaults to false (only syncs the first parent/child)',
+        describe: 'should sync all parents (if is up). Defaults to false (only syncs the first parent/child)',
         type: 'boolean',
         required: true,
         default: false,
@@ -91,17 +92,66 @@ export class SyncCommand implements ICommand<SyncOptions> {
   }
 
   public async execute(args?: ArgumentsCamelCase<SyncOptions>): Promise<void> {
-    const pushOptions = await this.getPushOptions();
+    try {
+      const currentBranch = await this.branchHelper.getCurrentBranch();
+      const currentStash = await this.createStash(currentBranch);
 
-    if (args?.target) {
-      await this.rebase(args.target);
-    } else if (args?.down) {
-      await this.syncDown(args?.full, pushOptions);
-    } else {
-      await this.syncUp(args?.full, pushOptions);
+      let pushOptions: IPushOptions = 'current';
+      if (args?.target) {
+        await this.rebase(args.target);
+        await this.push(pushOptions, 'current');
+      } else if (args?.down) {
+        await this.syncDown(currentBranch);
+        await this.push(pushOptions, 'current');
+      } else {
+        pushOptions = await this.getPushOptions();
+        await this.syncUp(currentBranch, args?.full, pushOptions);
+      }
+
+      await this.git.checkout(currentBranch);
+      await this.applyStash(currentStash);
+    } catch (error) {
+      await this.git.stash(['drop']);
+      throw error;
+    }
+  }
+  
+  public async syncUp(currentBranch: string, full?: boolean, pushOptions?: IPushOptions): Promise<void> {
+    const { firstParent, reversedParentBranches } = await this.getSyncBranchOrder(currentBranch, full);
+
+    await this.git.fetch('origin/main');
+
+    let lastBranch = full ? 'origin/main' : firstParent;
+    if (!full && firstParent === 'main') {
+      lastBranch = 'origin/main';
     }
 
-    await this.push(pushOptions, 'current');
+    for (const branch of reversedParentBranches) {
+      await this.git.checkout(branch);
+      await this.rebase(lastBranch);
+      await this.push(pushOptions, 'current');
+      lastBranch = branch;
+    }
+
+    this.logger.log('Sync Up successful');
+  }
+
+  public async syncDown(currentBranch: string): Promise<void> {
+    try {
+      const childBranches = await this.childrenHelper.getChildren(currentBranch);
+    
+      for (const branch of childBranches) {
+        const { firstParent } = await this.getSyncBranchOrder(branch, false);
+        await this.git.checkout(branch);
+        await this.rebase(firstParent);
+        await this.push('current', 'current');
+      }
+
+      this.logger.info('Sync down successful');
+    } catch (error) {
+      this.logger.error('Error syncing down', error);
+      throw error;
+    }
   }
 
   public async getPushOptions(): Promise<IPushOptions> {
@@ -117,36 +167,6 @@ export class SyncCommand implements ICommand<SyncOptions> {
     });
 
     return answer.action;
-  }
-
-  public async syncUp(full?: boolean, pushOptions?: IPushOptions): Promise<void> {
-    try {
-      const currentBranch = await this.branchHelper.getCurrentBranch();
-      const { firstParent, reversedParentBranches } = await this.getSyncBranchOrder(currentBranch, full);
-
-      const currentStash = `zgit-cli-${currentBranch}`;
-      await this.git.stash(['save', '--include-untracked', currentStash]);
-      await this.git.fetch('origin/main');
-
-      let lastBranch = full ? 'origin/main' : firstParent;
-      if (!full && firstParent === 'main') {
-        lastBranch = 'origin/main';
-      }
-
-      for (const branch of reversedParentBranches) {
-        await this.git.checkout(branch);
-        await this.rebase(lastBranch);
-        await this.push(pushOptions, 'current');
-        lastBranch = branch;
-      }
-
-      await this.applyStash(currentStash);
-
-      this.logger.log('Sync successful');
-    } catch (error) {
-      await this.git.stash(['drop']);
-      throw error;
-    }
   }
 
   public async getSyncBranchOrder(currentBranch: string, full?: boolean)
@@ -174,8 +194,10 @@ export class SyncCommand implements ICommand<SyncOptions> {
     await this.checkStatus('stash');
   }
 
-  public async syncDown(full?: boolean, pushOptions?: IPushOptions): Promise<void> {
-    this.logger.log('Syncing down');
-    throw new Error('Not implemented yet' + ' - full: ' + full + pushOptions);
+  public async createStash(currentBranch: string): Promise<string> {
+    const stashName = `zgit-cli-${currentBranch}`;
+    await this.git.stash(['save', '--include-untracked', stashName]);
+    return stashName;
   }
+
 }

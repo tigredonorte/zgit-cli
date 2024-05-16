@@ -5,6 +5,7 @@ import { MockBranchHelper } from '../../helpers/BranchHelper/MockBranchHelper';
 import { MockLoggerHelper } from '../../helpers/LoggerHelper/MockLoggerHelper';
 import { MockParentHelper } from '../../helpers/ParentHelper/MockParentHelper';
 import { SyncCommand, SyncOptions } from './sync';
+import { MockChildrenHelper } from '../../helpers/ChildrenHelper/MockChildrenHelper';
 
 jest.mock('enquirer', () => ({
   prompt: jest.fn(),
@@ -15,6 +16,7 @@ describe('SyncCommand', () => {
   let parentHelperMock: jest.Mocked<MockParentHelper>;
   let branchHelperMock: jest.Mocked<MockBranchHelper>;
   let loggerHelperMock: jest.Mocked<MockLoggerHelper>;
+  let childrenHelperMock: jest.Mocked<MockChildrenHelper>;
   let mockPrompt: jest.MockedFunction<typeof enquirer.prompt>;
   let mockSimpleGit: jest.Mocked<{
     status: jest.MockedFunction<SimpleGit['status']>,
@@ -41,12 +43,14 @@ describe('SyncCommand', () => {
     branchHelperMock = new MockBranchHelper();
     branchHelperMock = new MockBranchHelper();
     loggerHelperMock = new MockLoggerHelper();
+    childrenHelperMock = new MockChildrenHelper();
     mockPrompt = (enquirer.prompt as jest.Mock);
     syncCommand = new SyncCommand(
       mockSimpleGit as unknown as SimpleGit,
       parentHelperMock,
       branchHelperMock,
-      loggerHelperMock
+      loggerHelperMock,
+      childrenHelperMock,
     );
   });
 
@@ -236,7 +240,7 @@ describe('SyncCommand', () => {
       const callTimes = parentResponse.parentBranches.length + 1;
       const pushOptions = 'current';
   
-      await syncCommand.syncUp(true, pushOptions);
+      await syncCommand.syncUp('', true, pushOptions);
   
       const temp = parentResponse.parentBranches.map((branch) => [branch]);
       const index = stashList.findIndex(stash => stash.message.includes(stashMessage));
