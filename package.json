@@ -12,7 +12,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "start": "nodemon",
-    "sync": "npm uninstall -g . && rimraf ./dist && npm run build && npm i -g --force ."
+    "sync": "npm uninstall -g . && rimraf ./dist && rimraf $(node getNodePath.js) && npm run build && npm i -g --force ."
   },
   "bin": {
     "zgit-cli": "./dist/index.js"
