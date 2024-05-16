@@ -2,6 +2,7 @@ import { myContainer } from '../inversify/myContainer';
 import { ICommand } from './ICommand';
 import { BackCommand } from './back/back';
 import { BranchCommand } from './branch/branch';
+import { CleanBranchesCommand } from './clean/clean';
 import { CommitCommand } from './commit/commit';
 import { DownCommand } from './down/down';
 import { FeatureCommand } from './feature/feature';
@@ -17,5 +18,6 @@ export const CommandRegistry: Record<string, ICommand> = {
   next: myContainer.resolve<NextCommand>(NextCommand),
   back: myContainer.resolve<BackCommand>(BackCommand),
   branch: myContainer.resolve<BranchCommand>(BranchCommand),
-  feature: myContainer.resolve<FeatureCommand>(FeatureCommand)
+  feature: myContainer.resolve<FeatureCommand>(FeatureCommand),
+  clean: myContainer.resolve<CleanBranchesCommand>(CleanBranchesCommand),
 };
