@@ -13,9 +13,9 @@ Stacked diffs, also known as stacked changes or stacked pull requests, involve s
 5. `Incremental Testin`:: Each change can be tested independently, which helps in identifying the cause of regressions or bugs.
 
 ### Further Reading
-[Graphite: Stacked Diffs](https://graphite.dev/)
-[StGit: Stacked Git](https://stacked-git.github.io/)
-[Stacked Diffs vs. Pull Requests](https://github.com/shish/stack-guide)
+- [Graphite: Stacked Diffs](https://graphite.dev/)
+- [StGit: Stacked Git](https://stacked-git.github.io/)
+- [Stacked Diffs vs. Pull Requests](https://github.com/shish/stack-guide)
 
 ## Features
 
