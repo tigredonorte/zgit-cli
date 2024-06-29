@@ -21,7 +21,7 @@
     "enquirer": "^2.4.1",
     "inversify": "^6.0.2",
     "reflect-metadata": "^0.1.13",
-    "simple-git": "^3.20.0",
+    "simple-git": "^3.25.0",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
