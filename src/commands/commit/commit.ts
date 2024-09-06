@@ -66,8 +66,8 @@ export class CommitCommand implements ICommand<CommitOptions> {
       name: 'action',
       message: 'Would you like to amend, add a new commit message, or cancel?',
       choices: [
-        { name: 'amend', message: 'Amend the last commit' },
         { name: 'newMessage', message: 'Add a new commit message' },
+        { name: 'amend', message: 'Amend the last commit' },
         { name: 'cancel', message: 'Cancel operation'}
       ]
     });
@@ -80,7 +80,7 @@ export class CommitCommand implements ICommand<CommitOptions> {
       await this.git.raw(['commit', '--amend', '--no-edit']);
       this.logger.log('Commit amended.');
       return '';
-    } 
+    }
     
     if (response.action === 'newMessage') {
       const messageResponse: { message: string } = await prompt({
@@ -119,14 +119,34 @@ export class CommitCommand implements ICommand<CommitOptions> {
     }
 
     commitMessage = result;
+    const finalMessage = jiraTask ? `${jiraTask}: ${commitMessage}` : commitMessage;
     if (commitMessage) {
-      const finalMessage = jiraTask ? `${jiraTask}: ${commitMessage}` : commitMessage;
       await this.git.commit(finalMessage);
       this.logger.log(`Committed with message: ${finalMessage}`);
     }
 
     const result2 = await this.git.push('origin', 'HEAD', ['--force']);
-    this.logger.log('Pushed to origin HEAD with force. \n', result2.remoteMessages.all.join('\n'));
+    const pushOutput = result2.remoteMessages.all.join('\n');
+
+    const prLinkMatch = pushOutput.match(/https?:\/\/[^\s]+/);
+    if (prLinkMatch) {
+      const prLink = prLinkMatch[0];
+      const prNumberMatch = prLink.match(/\/(?:pull|pull-requests)\/(\d+)/);
+      const prNumber = prNumberMatch ? prNumberMatch[1] : 'PR';
+
+      // Construct the Markdown-formatted clickable link
+      const markdownLink = `[(pull request #${prNumber})](${prLink})`;
+
+      this.logger.log(`Captured PR link: ${markdownLink}`);
+
+      // Amend the commit to add the Markdown link
+      await this.git.raw(['commit', '--amend', '-m', `${finalMessage}\n\n${markdownLink}`]);
+      this.logger.log('Commit message updated with PR link.');
+      await this.git.push('origin', 'HEAD', ['--force']);
+    } else {
+      this.logger.log('No PR link found.');
+    }
+    this.logger.log('Pushed to origin HEAD with force. \n', pushOutput);
   }
 
   private async hasStagedChanges(): Promise<boolean> {
