@@ -128,6 +128,9 @@ export class CommitCommand implements ICommand<CommitOptions> {
     const result2 = await this.git.push('origin', 'HEAD', ['--force']);
     const pushOutput = result2.remoteMessages.all.join('\n');
 
+    if (!commitMessage) {
+      return;
+    }
     const prLinkMatch = pushOutput.match(/https?:\/\/[^\s]+/);
     if (prLinkMatch) {
       const prLink = prLinkMatch[0];
