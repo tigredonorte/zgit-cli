@@ -20,6 +20,11 @@ export class CleanBranchesCommand implements ICommand {
   }
 
   public async execute(): Promise<void> {
+    const branchesToDelete = await this.getBranchesToDelete();
+    await this.deleteBranches(branchesToDelete);
+  }
+
+  private async getBranchesToDelete(): Promise<string[]> {
     try {
       // Fetch and prune branches
       await this.git.fetch(['--prune']);
@@ -27,21 +32,29 @@ export class CleanBranchesCommand implements ICommand {
       // Get the list of all local branches
       const localBranches = await this.git.branchLocal();
       
-      // Get the list of all remote-tracking branches
       const remoteBranches = await this.git.branch(['-r']);
-      
-      // Find branches to delete
+
+      const currentBranch = (await this.git.revparse(['--abbrev-ref', 'HEAD'])).trim();
+
       const branchesToDelete = localBranches.all.filter(branch => 
+        branch !== currentBranch &&
         !remoteBranches.all.some(remoteBranch => remoteBranch.endsWith(branch))
       );
+      return branchesToDelete;
+    } catch (error) {
+      console.error('Error getting branches to delete:', error);
+      return [];
+    }
+  }
 
-      // Delete the branches
-      for (const branch of branchesToDelete) {
+  private async deleteBranches(branchesToDelete: string[]): Promise<void> {
+    for (const branch of branchesToDelete) {
+      try {
         await this.git.branch(['-D', branch]);
         console.log(`Deleted branch: ${branch}`);
+      } catch (error) {
+        console.error(`Error deleting branch ${branch}:`, error);
       }
-    } catch (error) {
-      console.error('Error cleaning branches:', error);
     }
   }
 }

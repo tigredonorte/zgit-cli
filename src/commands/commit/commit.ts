@@ -8,6 +8,7 @@ import { ICommand } from '../ICommand';
 
 interface CommitOptions {
   message?: string;
+  enablePrLink?: boolean;
 }
 @injectable()
 export class CommitCommand implements ICommand<CommitOptions> {
@@ -26,6 +27,12 @@ export class CommitCommand implements ICommand<CommitOptions> {
         describe: 'port to bind on',
         type: 'string',
         required: false,
+      })
+      .positional('enablePrLink', {
+        describe: 'should add PR link to commit message',
+        type: 'boolean',
+        required: false,
+        default: false,
       });
   }
 
@@ -105,6 +112,7 @@ export class CommitCommand implements ICommand<CommitOptions> {
 
   public async execute(args?: ArgumentsCamelCase<CommitOptions>): Promise<void> {
     let commitMessage = args?.message;
+    const enablePrLink = args?.enablePrLink;
     const branchName = await this.git.revparse(['--abbrev-ref', 'HEAD']);
     const jiraTask = branchName.match(/[A-Z]+-\d+/)?.[0];
 
@@ -127,31 +135,23 @@ export class CommitCommand implements ICommand<CommitOptions> {
 
     const result2 = await this.git.push('origin', 'HEAD', ['--force']);
     const pushOutput = result2.remoteMessages.all.join('\n');
-
-    if (!commitMessage) {
-      return;
-    }
     const prLinkMatch = pushOutput.match(/https?:\/\/[^\s]+/);
-    if (prLinkMatch) {
-      const prLink = prLinkMatch[0];
-      const prNumberMatch = prLink.match(/\/(?:pull|pull-requests)\/(\d+)/);
-      if (prNumberMatch) {
-        const prNumber = prNumberMatch[1];
+    const prLink = prLinkMatch?.[0];
+    const prNumberMatch = prLink?.match?.(/\/(?:pull|pull-requests)\/(\d+)/);
+    if (prNumberMatch && enablePrLink) {
+      const prNumber = prNumberMatch[1];
 
-        // Construct the Markdown-formatted clickable link
-        const markdownLink = `[(pull request #${prNumber})](${prLink})`;
-  
-        this.logger.log(`Captured PR link: ${markdownLink}`);
-  
-        // Amend the commit to add the Markdown link
-        await this.git.raw(['commit', '--amend', '-m', `${finalMessage}\n\n${markdownLink}`]);
-        this.logger.log('Commit message updated with PR link.');
-        await this.git.push('origin', 'HEAD', ['--force']);
-      }
-    } else {
-      this.logger.log('No PR link found.');
+      // Construct the Markdown-formatted clickable link
+      const markdownLink = `[(pull request #${prNumber})](${prLink})`;
+
+      this.logger.log(`Captured PR link: ${markdownLink}`);
+
+      // Amend the commit to add the Markdown link
+      await this.git.raw(['commit', '--amend', '-m', `${finalMessage}\n\n${markdownLink}`]);
+      this.logger.log('Commit message updated with PR link.');
+      await this.git.push('origin', 'HEAD', ['--force']);
     }
-    this.logger.log('Pushed to origin HEAD with force. \n', pushOutput);
+    this.logger.log('Pushed to origin HEAD with force. \n', prLink);
   }
 
   private async hasStagedChanges(): Promise<boolean> {
